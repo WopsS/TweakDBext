@@ -27,18 +27,18 @@ jobs:
         shell: powershell
         run: Expand-Archive -Path ./premake/premake.zip -DestinationPath ./premake
 
-      - name: Generate project
+      - name: Generate projects
         run: |
           cd premake
-          ./generate_project.bat
+          ./generate_projects.bat
 
       - name: Build
         run: |
-          cd premake/project
+          cd premake/projects
           MSBuild.exe TweakDBext.sln -v:minimal -m -property:Configuration=${{ matrix.config }}
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v2
         with:
           name: TweakDBext-${{ matrix.config }}
-          path: build/${{ matrix.config }}/
+          path: build/${{ matrix.config }}/bin

@@ -1,9 +1,10 @@
 require("premake", ">=5.0.0-alpha16")
 
 paths = require("extensions/paths")
+prj = require("extensions/project")
 
 workspace("TweakDBext")
-    location("project")
+    location("projects")
 
     architecture("x86_64")
     configurations({ "Debug", "Release" })
@@ -26,4 +27,8 @@ workspace("TweakDBext")
 
     filter({})
 
-    include(paths.src())
+    group("Dependencies")
+        include(paths.modules("spdlog"))
+
+    group("")
+        include(paths.src())

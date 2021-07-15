@@ -363,5 +363,5 @@ FodyWeavers.xsd
 
 ### Custom ###
 build
-premake/project
+premake/projects
 premake/premake5.exe

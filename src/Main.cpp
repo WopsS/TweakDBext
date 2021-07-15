@@ -1,12 +1,15 @@
 #include "stdafx.hpp"
+#include "Utils.hpp"
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
 {
+    Utils::CreateLogger();
     return true;
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
 {
+    spdlog::shutdown();
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)
