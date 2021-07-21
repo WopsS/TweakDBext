@@ -47,3 +47,13 @@ std::filesystem::path Utils::GetRootDir()
 
     return rootDir;
 }
+
+std::wstring Utils::ToWString(const char* aText)
+{
+    auto length = strlen(aText);
+
+    std::wstring result(L"", length);
+    mbstowcs(result.data(), aText, length);
+
+    return result;
+}
