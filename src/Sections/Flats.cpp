@@ -101,7 +101,7 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
             return false;
         }
 
-        int32_t offset;
+        int32_t offset = 0;
         auto& value = aValues.at(flatInfo.valueIndex);
 
         auto it = flatsPool.find(flatInfo.valueIndex);
@@ -111,16 +111,63 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
         }
         else
         {
-            RED4ext::CStackType stackType;
-            stackType.type = value->type;
-            stackType.value = value->memory;
+            // I am not sure if offset = 0 is the "does not exist", might be value at offset 0 so I'm using a boolean.
+            bool isSameValue = false;
 
-            offset = db->CreateFlatValue(stackType);
+            /*
+             * Does the key exist and has a value? If it does then do a check if the user is not trying to replace the
+             * key's value with the same value (yes, it is dumb but who knows), this should prevent adding duplicate
+             * flats for the same key.
+             */
+            auto currFlatValue = db->GetFlatValue(flatInfo.id);
+            if (currFlatValue)
+            {
+                auto currValue = currFlatValue->GetValue();
+                if (currValue.type == value->type && currValue.type->IsEqual(currValue.value, value->memory))
+                {
+                    offset = currFlatValue->ToTDBOffset();
+                    isSameValue = true;
+                }
+            }
+
+            if (!isSameValue)
+            {
+                RED4ext::CStackType stackType;
+                stackType.type = value->type;
+                stackType.value = value->memory;
+
+                offset = db->CreateFlatValue(stackType);
+            }
+
             flatsPool.emplace(flatInfo.valueIndex, offset);
         }
 
-        flatInfo.id.SetTDBOffset(offset);
-        db->AddFlat(flatInfo.id);
+        bool isNewFlat = true;
+        {
+            /*
+             * Going to do a read lock, based on Sombra's research "lock_guard" is used for add/remove, "shared_lock"
+             * for reads.
+             */
+            std::shared_lock<RED4ext::SharedMutex> _(db->mutex00);
+
+            auto flatIt = db->flats.Find(flatInfo.id);
+            if (flatIt != db->flats.End())
+            {
+                // ID already exist, change its offset. Changing flat type is allowed, might lead to undefined behavior.
+                if (flatIt->ToTDBOffset() != offset)
+                {
+                    flatIt->SetTDBOffset(offset);
+                }
+
+                isNewFlat = false;
+            }
+        }
+
+        if (isNewFlat)
+        {
+            flatInfo.id.SetTDBOffset(offset);
+            db->AddFlat(flatInfo.id);
+        }
     }
 
     return true;
