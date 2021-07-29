@@ -5,6 +5,7 @@ prj = require("extensions/project")
 
 workspace("TweakDBext")
     location("projects")
+    startproject("TweakDBext")
 
     architecture("x86_64")
     configurations({ "Debug", "Release" })
