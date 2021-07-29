@@ -84,6 +84,14 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
         return false;
     }
 
+    /*
+     * Our own custom flat pool, values might be duplicated in the game's pool, but at least this will be prevented in
+     * the same database.
+     *
+     * Remarks: Used as <valueIndex, flat offset>.
+     */
+    std::unordered_map<uint32_t, int32_t> flatsPool;
+
     auto db = RED4ext::TweakDB::Get();
     for (uint32_t i = 0; i < count; i++)
     {
@@ -93,21 +101,13 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
             return false;
         }
 
+        int32_t offset;
         auto& value = aValues.at(flatInfo.valueIndex);
 
-        auto flat = db->GetFlatValue(flatInfo.id);
-        if (flat)
+        auto it = flatsPool.find(flatInfo.valueIndex);
+        if (it != flatsPool.end())
         {
-            auto stackType = flat->GetValue();
-            if (stackType.type != value->type)
-            {
-                continue;
-            }
-
-            if (!value->type->IsEqual(value->memory, stackType.value))
-            {
-                flat->SetValue(value->memory);
-            }
+            offset = it->second;
         }
         else
         {
@@ -115,11 +115,14 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
             stackType.type = value->type;
             stackType.value = value->memory;
 
-            auto offset = db->CreateFlatValue(stackType);
-            flatInfo.id.SetTDBOffset(offset);
+            offset = db->CreateFlatValue(stackType);
+            flatsPool.emplace(flatInfo.valueIndex, offset);
 
-            db->AddFlat(flatInfo.id);
+            flatInfo.id.SetTDBOffset(offset);
         }
+
+        flatInfo.id.SetTDBOffset(offset);
+        db->AddFlat(flatInfo.id);
     }
 
     return true;
