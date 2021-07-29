@@ -117,8 +117,6 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
 
             offset = db->CreateFlatValue(stackType);
             flatsPool.emplace(flatInfo.valueIndex, offset);
-
-            flatInfo.id.SetTDBOffset(offset);
         }
 
         flatInfo.id.SetTDBOffset(offset);
