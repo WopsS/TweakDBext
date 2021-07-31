@@ -153,10 +153,17 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
             auto flatIt = db->flats.Find(flatInfo.id);
             if (flatIt != db->flats.End())
             {
-                // ID already exist, change its offset. Changing flat type is allowed, might lead to undefined behavior.
+                // ID already exist, try to change its offset.
                 if (flatIt->ToTDBOffset() != offset)
                 {
-                    flatIt->SetTDBOffset(offset);
+                    auto flatValue = db->GetFlatValue(*flatIt);
+                    auto currValue = flatValue->GetValue();
+
+                    // Change the offset only if it is the same type.
+                    if (currValue.type == value->type)
+                    {
+                        flatIt->SetTDBOffset(offset);
+                    }
                 }
 
                 isNewFlat = false;
