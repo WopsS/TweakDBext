@@ -25,8 +25,8 @@ bool TweakDB::Load()
     spdlog::debug(L"Processing TweakDB file '{}'", fileName.c_str());
 
     auto fileSize = file.GetLength();
-    auto allocator = RED4ext::EngineAllocator::Get();
-    auto allocResult = allocator->AllocAligned(static_cast<uint32_t>(fileSize), 1);
+    RED4ext::Memory::EngineAllocator allocator;
+    auto allocResult = allocator.AllocAligned(static_cast<uint32_t>(fileSize), 1);
     auto buffer = allocResult.memory;
 
     file.ReadWrite(buffer, static_cast<uint32_t>(fileSize));
@@ -40,14 +40,14 @@ bool TweakDB::Load()
      *
      * We could implement our own memory stream, but too much hassle.
      */
-    auto reader = allocator->Alloc<RED4ext::MemoryStream>();
+    auto reader = allocator.Alloc<RED4ext::MemoryStream>();
     RED4ext::MemoryStream::Construct(reader, buffer, fileSize);
 
     FileHeader header;
     if (!reader->ReadWriteEx(&header))
     {
         spdlog::warn(L"Could not read the header, file_name={}, file_size={}", fileName.c_str(), fileSize);
-        allocator->Free(&allocResult);
+        allocator.Free(&allocResult);
 
         return false;
     }
@@ -78,8 +78,8 @@ bool TweakDB::Load()
     GroupTags groupTags(reader, header.offsets.groupTags);
     groupTags.Load();
 
-    allocator->Free(reader);
-    allocator->Free(&allocResult);
+    allocator.Free(reader);
+    allocator.Free(&allocResult);
 
     return true;
 }

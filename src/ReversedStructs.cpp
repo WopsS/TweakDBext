@@ -6,7 +6,7 @@ extern size_t g_Unk01_ctor;
 Unk01::Unk01(RED4ext::CName aTypeName)
 {
     using func_t = Unk01*(*)(Unk01* aThis, RED4ext::CName aTypeName);
-    RED4ext::REDfunc<func_t> func(g_Unk01_ctor);
+    RED4ext::RelocFunc<func_t> func(g_Unk01_ctor);
     func(this, aTypeName);
 }
 

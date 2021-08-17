@@ -64,8 +64,7 @@ std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::IRTTIType* aType)
     std::vector<std::unique_ptr<Unk01>> result(count);
     for (uint32_t i = 0; i < count; i++)
     {
-        RED4ext::CName name;
-        aType->GetName(name);
+        auto name = aType->GetName();
 
         result[i] = std::make_unique<Unk01>(name);
         auto& unk = result[i];
