@@ -32,11 +32,11 @@ RED4EXT_ASSERT_OFFSET(FileHeader, offsets, 0x10);
 struct FlatType
 {
     RED4ext::CName name;
-    uint32_t unk8;
+    uint32_t count;
 };
 RED4EXT_ASSERT_SIZE(FlatType, 0xC);
 RED4EXT_ASSERT_OFFSET(FlatType, name, 0x0);
-RED4EXT_ASSERT_OFFSET(FlatType, unk8, 0x8);
+RED4EXT_ASSERT_OFFSET(FlatType, count, 0x8);
 
 struct FlatInfo
 {
