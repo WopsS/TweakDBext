@@ -15,9 +15,9 @@
 |                   | Types[count]      |                       | `0xC`     | `name : CName`                | -                                     |
 |                   |                   |                       |           | `values_count : uint32`       | How many values are with the type.    |
 |                   | Values Header     |                       | `0x4`     | `count : uint32`              | -                                     |
-|                   | Values[count]     |                       | `dynamic` | Depends on the value type.    | -                                     |
-|                   | Flats Header      |                       | `0x4`     | `count : uint32`              | -                                     |
-|                   | Flats[count]      |                       | `0xC`     | `id : TweakDBID`              | -                                     |
+|                   | Values[count]     |                       | `dynamic` | `value members`               | Depends on the value type.            |
+|                   |  \|-Flats Header  |                       | `0x4`     | `count : uint32`              | -                                     |
+|                   |  \|-Flats[count]  |                       | `0xC`     | `id : TweakDBID`              | -                                     |
 |                   |                   |                       |           | `value_index : uint32`        | -                                     |
 | **Records**       |                   | `records_offset`      | `dynamic` |                               | -                                     |
 |                   | Header            |                       | `0x4`     | `count : uint32`              | -                                     |
