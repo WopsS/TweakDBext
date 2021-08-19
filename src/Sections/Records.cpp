@@ -58,7 +58,7 @@ std::unordered_map<uint32_t, RED4ext::CClass*> Records::CollectRecordTypes()
     }
 
     std::unordered_map<uint32_t, RED4ext::CClass*> result;
-    rtti->types.ForEach([base, &result](RED4ext::CName aName, RED4ext::IRTTIType* aType) {
+    rtti->types.ForEach([base, &result](RED4ext::CName aName, RED4ext::CBaseRTTIType* aType) {
         constexpr auto SEED = 0x5EEDBA5E;
 
         auto typeId = aType->GetType();

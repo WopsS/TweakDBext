@@ -11,7 +11,7 @@ public:
     bool Load();
 
 private:
-    std::vector<RED4ext::IRTTIType*> ReadTypes();
-    std::vector<std::unique_ptr<Unk01>> ReadValues(RED4ext::IRTTIType* aType);
+    std::vector<RED4ext::CBaseRTTIType*> ReadTypes();
+    std::vector<std::unique_ptr<Unk01>> ReadValues(RED4ext::CBaseRTTIType* aType);
     bool LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues);
 };

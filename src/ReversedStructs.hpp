@@ -5,7 +5,7 @@ struct Unk01
     Unk01(RED4ext::CName aTypeName);
     ~Unk01();
 
-    RED4ext::IRTTIType* type;
+    RED4ext::CBaseRTTIType* type;
     void* memory;
     int64_t unk10;
     int64_t unk18;

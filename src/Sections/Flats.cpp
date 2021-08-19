@@ -23,7 +23,7 @@ bool Flats::Load()
     return true;
 }
 
-std::vector<RED4ext::IRTTIType*> Flats::ReadTypes()
+std::vector<RED4ext::CBaseRTTIType*> Flats::ReadTypes()
 {
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
@@ -31,7 +31,7 @@ std::vector<RED4ext::IRTTIType*> Flats::ReadTypes()
         return {};
     }
 
-    std::vector<RED4ext::IRTTIType*> result(count);
+    std::vector<RED4ext::CBaseRTTIType*> result(count);
 
     auto rtti = RED4ext::CRTTISystem::Get();
     for (uint32_t i = 0; i < count; i++)
@@ -46,14 +46,20 @@ std::vector<RED4ext::IRTTIType*> Flats::ReadTypes()
         if (!result[i])
         {
             auto typeName = type.name.ToString();
-            spdlog::warn("Flat type not found, type='{}', hash={:#x}", typeName, type.name);
+            if (!typeName)
+            {
+                typeName = "unknown";
+            }
+
+            spdlog::error("Flat type not found, type='{}', hash={:#x}", typeName, type.name);
+            return {};
         }
     }
 
     return result;
 }
 
-std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::IRTTIType* aType)
+std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::CBaseRTTIType* aType)
 {
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
