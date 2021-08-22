@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseSection.hpp"
-#include "ReversedStructs.hpp"
 
 class Flats : public BaseSection
 {
@@ -11,7 +10,16 @@ public:
     bool Load();
 
 private:
+    struct Storage
+    {
+        Storage(RED4ext::CName aType);
+        ~Storage();
+
+        RED4ext::CBaseRTTIType* type;
+        void* memory;
+    };
+
     std::vector<RED4ext::CBaseRTTIType*> ReadTypes();
-    std::vector<std::unique_ptr<Unk01>> ReadValues(RED4ext::CBaseRTTIType* aType);
-    bool LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues);
+    std::vector<std::unique_ptr<Storage>> ReadValues(RED4ext::CBaseRTTIType* aType);
+    bool LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues);
 };

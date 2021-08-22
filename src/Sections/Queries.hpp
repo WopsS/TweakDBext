@@ -1,7 +1,6 @@
 #pragma once
 
 #include "BaseSection.hpp"
-#include "ReversedStructs.hpp"
 
 class Queries : public BaseSection
 {

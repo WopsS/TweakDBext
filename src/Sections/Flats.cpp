@@ -3,6 +3,11 @@
 #include "FileStructs.hpp"
 #include "Utils.hpp"
 
+namespace
+{
+RED4ext::Memory::GMPL_TDB_LoaderAllocator tdbLoaderAllocator;
+}
+
 bool Flats::Load()
 {
     if (!BaseSection::Load())
@@ -59,7 +64,7 @@ std::vector<RED4ext::CBaseRTTIType*> Flats::ReadTypes()
     return result;
 }
 
-std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::CBaseRTTIType* aType)
+std::vector<std::unique_ptr<Flats::Storage>> Flats::ReadValues(RED4ext::CBaseRTTIType* aType)
 {
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
@@ -67,12 +72,12 @@ std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::CBaseRTTIType* aT
         return {};
     }
 
-    std::vector<std::unique_ptr<Unk01>> result(count);
+    std::vector<std::unique_ptr<Storage>> result(count);
     for (uint32_t i = 0; i < count; i++)
     {
         auto name = aType->GetName();
 
-        result[i] = std::make_unique<Unk01>(name);
+        result[i] = std::make_unique<Storage>(name);
         auto& unk = result[i];
 
         aType->Unserialize(m_reader, unk->memory, 0);
@@ -81,7 +86,7 @@ std::vector<std::unique_ptr<Unk01>> Flats::ReadValues(RED4ext::CBaseRTTIType* aT
     return result;
 }
 
-bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
+bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
 {
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
@@ -183,4 +188,42 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Unk01>>& aValues)
     }
 
     return true;
+}
+
+Flats::Storage::Storage(RED4ext::CName aType)
+    : type(nullptr)
+    , memory(nullptr)
+{
+    auto rtti = RED4ext::CRTTISystem::Get();
+    type = rtti->GetType(aType);
+    if (!type)
+    {
+        return;
+    }
+
+    auto size = type->GetSize();
+    auto alignment = type->GetAlignment();
+
+    // Here they store the value inline if it size is less than 0x10 and alignment less than 0x8, but we don't care
+    // about that and will request it form allocator anyway.
+    auto allocResult = tdbLoaderAllocator.AllocAligned(size, alignment);
+    if (allocResult.memory)
+    {
+        memory = allocResult.memory;
+    }
+
+    type->Init(memory);
+    if (type->GetType() == RED4ext::ERTTIType::Array)
+    {
+        memory = &tdbLoaderAllocator;
+    }
+}
+
+Flats::Storage::~Storage()
+{
+    if (memory)
+    {
+        RED4ext::Memory::GMPL_TDB_LoaderAllocator allocator;
+        allocator.Free(memory);
+    }
 }
