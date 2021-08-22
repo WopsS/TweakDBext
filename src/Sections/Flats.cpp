@@ -78,9 +78,12 @@ std::vector<std::unique_ptr<Flats::Storage>> Flats::ReadValues(RED4ext::CBaseRTT
         auto name = aType->GetName();
 
         result[i] = std::make_unique<Storage>(name);
-        auto& unk = result[i];
+        if (!result[i]->type)
+        {
+            return {};
+        }
 
-        aType->Unserialize(m_reader, unk->memory, 0);
+        aType->Unserialize(m_reader, result[i]->memory, 0);
     }
 
     return result;
@@ -215,7 +218,7 @@ Flats::Storage::Storage(RED4ext::CName aType)
     type->Init(memory);
     if (type->GetType() == RED4ext::ERTTIType::Array)
     {
-        memory = &tdbLoaderAllocator;
+        new (memory) RED4ext::Memory::GMPL_TDB_LoaderAllocator();
     }
 }
 
