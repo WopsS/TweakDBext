@@ -223,7 +223,6 @@ Flats::Storage::~Storage()
 {
     if (memory)
     {
-        RED4ext::Memory::GMPL_TDB_LoaderAllocator allocator;
-        allocator.Free(memory);
+        tdbLoaderAllocator.Free(memory);
     }
 }
