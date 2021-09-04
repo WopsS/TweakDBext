@@ -47,6 +47,8 @@ bool TweakDB::Load()
     if (!reader->ReadWriteEx(&header))
     {
         spdlog::warn(L"Could not read the header, file_name={}, file_size={}", fileName.c_str(), fileSize);
+
+        allocator.Free(reader);
         allocator.Free(&allocResult);
 
         return false;
@@ -56,6 +58,9 @@ bool TweakDB::Load()
     {
         spdlog::warn(L"Magic mismatched, file_name={}, found={:#x}, expected={:#x}", fileName.c_str(), header.magic,
                      MAGIC);
+
+        allocator.Free(reader);
+        allocator.Free(&allocResult);
 
         return false;
     }
