@@ -1,31 +1,39 @@
 #include "stdafx.hpp"
-#include "TweakDB.hpp"
+#include "Hooks.hpp"
 #include "Utils.hpp"
 
-#include <iostream>
-#include <RED4ext/Scripting/Natives/Generated/Vector3.hpp>
-#include <RED4ext/Scripting/Natives/Generated/Color.hpp>
+BOOL APIENTRY DllMain(HMODULE aModule, DWORD aReason, LPVOID aReserved)
+{
+    switch (aReason)
+    {
+    case DLL_PROCESS_ATTACH:
+    {
+        DisableThreadLibraryCalls(aModule);
+
+        Utils::CreateLogger();
+        Hooks::Attach();
+
+        break;
+    }
+    case DLL_PROCESS_DETACH:
+    {
+        Hooks::Detach();
+        spdlog::shutdown();
+
+        break;
+    }
+    }
+
+    return TRUE;
+}
 
 RED4EXT_C_EXPORT bool RED4EXT_CALL Load(RED4ext::PluginHandle aHandle, const RED4ext::IRED4ext* aInterface)
 {
-    Utils::CreateLogger();
-
-    auto rootDir = Utils::GetRootDir();
-    auto cacheDir = rootDir / "r6" / "cache";
-
-    {
-        auto file = cacheDir / "tweakdb_modified.bin";
-
-        TweakDB tweakDB(file);
-        tweakDB.Load();
-    }
-
     return true;
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Unload()
 {
-    spdlog::shutdown();
 }
 
 RED4EXT_C_EXPORT void RED4EXT_CALL Query(RED4ext::PluginInfo* aInfo)

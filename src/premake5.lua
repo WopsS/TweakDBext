@@ -15,6 +15,7 @@ project("TweakDBext")
     {
         ".",
         prj.includes("spdlog"),
+        prj.includes("RenHook"),
         paths.deps("red4ext.sdk", "include")
     })
 
@@ -26,5 +27,6 @@ project("TweakDBext")
 
     links(
     {
-        prj.links("spdlog")
+        prj.links("spdlog"),
+        prj.links("RenHook")
     })

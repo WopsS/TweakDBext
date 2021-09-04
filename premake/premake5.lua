@@ -31,5 +31,9 @@ workspace("TweakDBext")
     group("Dependencies")
         include(paths.modules("spdlog"))
 
+        include(paths.modules("zycore"))
+        include(paths.modules("zydis"))
+        include(paths.modules("renhook"))
+
     group("")
         include(paths.src())
