@@ -150,6 +150,10 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
                 stackType.value = value->memory;
 
                 offset = db->CreateFlatValue(stackType);
+                if (offset == -1)
+                {
+                    spdlog::warn("Failed to create a new flat value, flat_id={}", flatInfo.id);
+                }
             }
 
             flatsPool.emplace(flatInfo.valueIndex, offset);
