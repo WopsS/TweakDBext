@@ -10,8 +10,8 @@ void Utils::CreateLogger()
     auto red4extDir = rootDir / L"red4ext";
     auto logsDir = red4extDir / L"logs";
 
-    auto console = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
-    auto file = std::make_shared<spdlog::sinks::basic_file_sink_st>(logsDir / "tweakdb.log", true);
+    auto console = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+    auto file = std::make_shared<spdlog::sinks::basic_file_sink_mt>(logsDir / "tweakdb.log", true);
 
     spdlog::sinks_init_list sinks = {console, file};
 
