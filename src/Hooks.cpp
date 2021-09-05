@@ -22,8 +22,20 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
         const auto& path = entry.path();
         if (entry.path().extension() == L".bin")
         {
-            TweakDB tweakDB(path);
-            tweakDB.Load();
+            try
+            {
+                TweakDB tweakDB(path);
+                tweakDB.Load();
+            }
+            catch (const std::exception& ex)
+            {
+                spdlog::warn(L"An exception occured while trying to load '{}' database", path.c_str());
+                spdlog::warn(ex.what());
+            }
+            catch (...)
+            {
+                spdlog::warn(L"An error occured while trying to load '{}' database", path.c_str());
+            }
         }
     }
 
@@ -36,7 +48,10 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 
     for (auto record : records)
     {
-        db->UpdateRecord(record);
+        if (!db->UpdateRecord(record))
+        {
+            spdlog::warn("Failed to update record, record_id={:#x}", record);
+        }
     }
 }
 } // namespace

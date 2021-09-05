@@ -15,14 +15,14 @@ bool TweakDB::Load()
 {
     auto fileName = m_path.filename().stem();
 
+    spdlog::debug(L"Processing TweakDB file '{}'", fileName.c_str());
+
     FileStream file(m_path, GENERIC_READ, FILE_SHARE_READ, OPEN_EXISTING, FILE_FLAG_SEQUENTIAL_SCAN);
     if (!file.IsOpen())
     {
         spdlog::warn(L"Could not open file, file_name={}, errno={:#x}", fileName.c_str(), GetLastError());
         return false;
     }
-
-    spdlog::debug(L"Processing TweakDB file '{}'", fileName.c_str());
 
     auto fileSize = file.GetLength();
     RED4ext::Memory::EngineAllocator allocator;

@@ -152,7 +152,7 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
                 offset = db->CreateFlatValue(stackType);
                 if (offset == -1)
                 {
-                    spdlog::warn("Failed to create a new flat value, flat_id={}", flatInfo.id);
+                    spdlog::warn("Failed to create a new flat value, flat_id={:#x}", flatInfo.id);
                 }
             }
 
