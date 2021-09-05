@@ -42,6 +42,23 @@ bool Records::Load()
                 spdlog::warn("Could not create record for type '{}'", type->name.ToString());
             }
         }
+        else
+        {
+            db->UpdateRecord(recordInfo.id);
+        }
+    }
+
+    // Doing some quick hack to update records until TweakDB writer is finalized.
+    std::lock_guard<RED4ext::SharedMutex> _(db->mutex01);
+
+    std::vector<RED4ext::TweakDBID> records;
+    db->recordsByID.for_each([&records](const auto& aId, auto& aHandle) {
+        records.push_back(aId);
+    });
+
+    for (auto record : records)
+    {
+        db->UpdateRecord(record);
     }
 
     return true;
