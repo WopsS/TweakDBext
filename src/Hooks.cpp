@@ -26,6 +26,18 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
             tweakDB.Load();
         }
     }
+
+    // Doing some quick hack to update records until TweakDB writer is finalized.
+    auto db = RED4ext::TweakDB::Get();
+    std::lock_guard<RED4ext::SharedMutex> _(db->mutex01);
+
+    std::vector<RED4ext::TweakDBID> records;
+    db->recordsByID.for_each([&records](const auto& aId, auto& aHandle) { records.push_back(aId); });
+
+    for (auto record : records)
+    {
+        db->UpdateRecord(record);
+    }
 }
 } // namespace
 
