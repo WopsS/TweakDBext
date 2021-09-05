@@ -1,0 +1,94 @@
+name: Release Workflow
+on:
+  push:
+    tags:
+      - v*.*.*
+
+jobs:
+  upload_release_assets:
+    name: Upload Release Assets
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+
+      - name: Create environment variables
+        run: |
+          $prefix = "refs/tags/v"
+          $version = $env:GITHUB_REF.Substring($prefix.Length)
+          echo "VERSION=${version}" | Out-File -FilePath $env:GITHUB_ENV -Encoding UTF8 -Append
+
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1
+
+      - name: Download Premake
+        shell: powershell
+        run: Invoke-WebRequest https://github.com/premake/premake-core/releases/download/v5.0.0-alpha16/premake-5.0.0-alpha16-windows.zip -OutFile ./premake/premake.zip
+
+      - name: Extract Premake
+        shell: powershell
+        run: Expand-Archive -Path ./premake/premake.zip -DestinationPath ./premake
+
+      - name: Generate projects
+        run: |
+          cd premake
+          ./generate_projects.bat
+
+      - name: Build
+        run: |
+          cd premake/projects
+          MSBuild.exe TweakDBext.sln -v:minimal -m -property:Configuration=Release
+
+      - name: Prepare files
+        run: |
+          $ReleaseDir = "release/red4ext/plugins/tweakdbext"
+
+          # Create the necessary directories.
+          New-Item -ItemType directory -Path $ReleaseDir | Out-Null
+
+          # Copy build artifacts.
+          Copy-Item -Path build/release/bin/TweakDBext.dll -Destination $ReleaseDir
+
+          # Concatenate the license and third party licenses.
+          $license = Get-Content -Path LICENSE.md
+          Add-Content -Path $ReleaseDir/LICENSE.txt -Value $license
+
+          Add-Content -Path $ReleaseDir/LICENSE.txt -Value ""
+
+          $third_party = Get-Content -Path THIRD_PARTY_LICENSES.md
+          Add-Content -Path $ReleaseDir/LICENSE.txt -Value $third_party
+
+          # Create a zip file.
+          Compress-Archive -Path release/* -DestinationPath tweakdbext_${env:VERSION}.zip
+
+          # Generate hash.
+          Get-FileHash -Algorithm SHA256 -Path tweakdbext_${env:VERSION}.zip | Format-List
+
+      - name: Prepare PDBs
+        run: |
+          # Create the necessary directories.
+          New-Item -ItemType directory -Path release_pdbs | Out-Null
+          New-Item -ItemType directory -Path release_pdbs/bin | Out-Null
+          New-Item -ItemType directory -Path release_pdbs/libs | Out-Null
+
+          # Copy the PDBs.
+          Copy-Item build/release/bin/*.pdb release_pdbs/bin
+          Copy-Item build/release/libs/*.pdb release_pdbs/libs
+
+          # Create a zip file.
+          Compress-Archive -Path release_pdbs/* -DestinationPath tweakdbext_${env:VERSION}_pdbs.zip
+
+          # Generate hash.
+          Get-FileHash -Algorithm SHA256 -Path tweakdbext_${env:VERSION}_pdbs.zip | Format-List
+
+      - name: Upload assets
+        uses: softprops/action-gh-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          files: |
+            tweakdbext_${{ env.VERSION }}.zip
+            tweakdbext_${{ env.VERSION }}_pdbs.zip
