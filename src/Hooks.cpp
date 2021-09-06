@@ -1,12 +1,11 @@
 #include "stdafx.hpp"
 #include "Hooks.hpp"
+#include "Addresses.hpp"
 #include "TweakDB.hpp"
 #include "Utils.hpp"
 
 namespace
 {
-constexpr auto TweakDB_Load_Addr = 0x140C42FA0 - RED4ext ::Addresses::ImageBase;
-
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2);
 renhook::prologue_hook<decltype(&_TweakDB_Load)> TweakDB_Load;
 
@@ -58,7 +57,7 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 
 void Hooks::Attach()
 {
-    auto addr = TweakDB_Load_Addr + reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
+    auto addr = Addresses::TweakDB_Load + reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
     new (&TweakDB_Load) renhook::prologue_hook<decltype(&_TweakDB_Load)>(addr, &_TweakDB_Load);
 
     TweakDB_Load.attach();

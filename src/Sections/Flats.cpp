@@ -219,7 +219,7 @@ Flats::Storage::Storage(RED4ext::CName aType)
         memory = allocResult.memory;
     }
 
-    type->Init(memory);
+    type->Construct(memory);
     if (type->GetType() == RED4ext::ERTTIType::Array)
     {
         new (memory) RED4ext::Memory::GMPL_TDB_LoaderAllocator();

@@ -12,7 +12,7 @@ workspace("TweakDBext")
     characterset("Unicode")
     symbols("Full")
 
-    cppdialect("C++17")
+    cppdialect("C++20")
     systemversion("latest")
 
     defines(
