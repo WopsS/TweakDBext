@@ -86,5 +86,7 @@ bool TweakDB::Load()
     allocator.Free(reader);
     allocator.Free(&allocResult);
 
+    spdlog::info(L"TweakDB file '{}' processed", fileName.c_str());
+
     return true;
 }

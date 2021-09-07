@@ -33,10 +33,13 @@ std::vector<RED4ext::CBaseRTTIType*> Flats::ReadTypes()
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
     {
+        spdlog::warn("Could not read types count");
         return {};
     }
 
     std::vector<RED4ext::CBaseRTTIType*> result(count);
+
+    spdlog::trace("Reading type(s), count={}", count);
 
     auto rtti = RED4ext::CRTTISystem::Get();
     for (uint32_t i = 0; i < count; i++)
@@ -44,6 +47,7 @@ std::vector<RED4ext::CBaseRTTIType*> Flats::ReadTypes()
         FlatType type;
         if (!m_reader->ReadWriteEx(&type))
         {
+            spdlog::warn("Could not the flat type info");
             break;
         }
 
@@ -61,6 +65,7 @@ std::vector<RED4ext::CBaseRTTIType*> Flats::ReadTypes()
         }
     }
 
+    spdlog::trace("Type(s) read, count={}", count);
     return result;
 }
 
@@ -69,22 +74,29 @@ std::vector<std::unique_ptr<Flats::Storage>> Flats::ReadValues(RED4ext::CBaseRTT
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
     {
+        spdlog::warn("Could not read values count");
         return {};
     }
+
+    auto typeName = aType->GetName();
+    spdlog::trace("Reading value(s), count={}, type={}", count, typeName.ToString());
 
     std::vector<std::unique_ptr<Storage>> result(count);
     for (uint32_t i = 0; i < count; i++)
     {
-        auto name = aType->GetName();
-
-        result[i] = std::make_unique<Storage>(name);
+        result[i] = std::make_unique<Storage>(typeName);
         if (!result[i]->type)
         {
+            spdlog::error("The value's type '{}' is nullptr, this should not happen, index={}", typeName.ToString(), i);
             return {};
         }
 
+        spdlog::trace("Unserializing a value, index={}", i);
         aType->Unserialize(m_reader, result[i]->memory, 0);
+        spdlog::trace("Unserialized the value, index={}", i);
     }
+
+    spdlog::trace("Value(s) read, count={}, type={}", count, typeName.ToString());
 
     return result;
 }
@@ -94,6 +106,7 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
     uint32_t count;
     if (!m_reader->ReadWriteEx(&count))
     {
+        spdlog::warn("Could not read flats count");
         return false;
     }
 
@@ -105,14 +118,19 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
      */
     std::unordered_map<uint32_t, int32_t> flatsPool;
 
+    spdlog::trace("Reading flat(s), count={}", count);
+
     auto db = RED4ext::TweakDB::Get();
     for (uint32_t i = 0; i < count; i++)
     {
         FlatInfo flatInfo;
         if (!m_reader->ReadWriteEx(&flatInfo))
         {
+            spdlog::warn("Could not flat info");
             return false;
         }
+
+        spdlog::trace("Processing flat, flat_id={:#x}", flatInfo.id);
 
         int32_t offset = 0;
         auto& value = aValues.at(flatInfo.valueIndex);
@@ -161,6 +179,8 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
 
         bool isNewFlat = true;
         {
+            spdlog::trace("Checking if flat exist, flat_id={:#x}", flatInfo.id);
+
             /*
              * Going to do a read lock, based on Sombra's research "lock_guard" is used for add/remove, "shared_lock"
              * for reads.
@@ -170,17 +190,26 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
             auto flatIt = db->flats.Find(flatInfo.id);
             if (flatIt != db->flats.End())
             {
+                spdlog::trace("Flat exist, trying to changing offset, flat_id={:#x}", flatInfo.id);
+
                 // ID already exist, try to change its offset.
                 if (flatIt->ToTDBOffset() != offset)
                 {
+                    spdlog::trace("Offset is different, changing it, flat_id={:#x}", flatInfo.id);
+
                     auto flatValue = db->GetFlatValue(*flatIt);
                     auto currValue = flatValue->GetValue();
 
                     // Change the offset only if it is the same type.
                     if (currValue.type == value->type)
                     {
+                        spdlog::trace("Flat offset changed, old={:#x}, new={:#x}", flatIt->ToTDBOffset(), offset);
                         flatIt->SetTDBOffset(offset);
                     }
+                }
+                else
+                {
+                    spdlog::trace("New offset is equal with the old one, not changing offset, flat_id={:#x}", flatInfo.id);
                 }
 
                 isNewFlat = false;
@@ -189,11 +218,18 @@ bool Flats::LoadFlats(const std::vector<std::unique_ptr<Storage>>& aValues)
 
         if (isNewFlat)
         {
+            spdlog::trace("Adding new flat, flat_id={:#x}", flatInfo.id);
+
             flatInfo.id.SetTDBOffset(offset);
             db->AddFlat(flatInfo.id);
+
+            spdlog::trace("New flat added, flat_id={:#x}", flatInfo.id);
         }
+
+        spdlog::trace("Flat processed, flat_id={:#x}", flatInfo.id);
     }
 
+    spdlog::trace("Flat(s) read, count={}", count);
     return true;
 }
 
