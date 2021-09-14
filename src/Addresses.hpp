@@ -4,5 +4,5 @@
 
 namespace Addresses
 {
-constexpr auto TweakDB_Load = 0x140C42FB0 - RED4ext::Addresses::ImageBase;
+constexpr auto TweakDB_Load = 0x140C43060 - RED4ext::Addresses::ImageBase;
 }
