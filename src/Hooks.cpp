@@ -1,13 +1,14 @@
 #include "stdafx.hpp"
 #include "Hooks.hpp"
 #include "Addresses.hpp"
+#include "DetourThreadsUpdater.hpp"
 #include "TweakDB.hpp"
 #include "Utils.hpp"
 
 namespace
 {
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2);
-renhook::prologue_hook<decltype(&_TweakDB_Load)> TweakDB_Load;
+decltype(&_TweakDB_Load) TweakDB_Load;
 
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 {
@@ -57,13 +58,28 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 
 void Hooks::Attach()
 {
-    auto addr = Addresses::TweakDB_Load + reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
-    new (&TweakDB_Load) renhook::prologue_hook<decltype(&_TweakDB_Load)>(addr, &_TweakDB_Load);
+    DetourTransactionBegin();
+    DetourThreadsUpdater _;
 
-    TweakDB_Load.attach();
+    TweakDB_Load = reinterpret_cast<decltype(TweakDB_Load)>(Addresses::TweakDB_Load +
+                                                            reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr)));
+    auto a = &_TweakDB_Load;
+    auto result = DetourAttach(&TweakDB_Load, _TweakDB_Load);
+    if (result != NO_ERROR)
+    {
+        auto message = fmt::format(L"Could not attach hook for main function, attach returned {}.\n\nProcess will exit "
+                                   L"to prevent further problems.",
+                                   result);
+        MessageBox(nullptr, message.c_str(), L"RED4ext", MB_ICONERROR | MB_OK);
+    }
+    DetourTransactionCommit();
 }
 
 void Hooks::Detach()
 {
-    TweakDB_Load.detach();
+    DetourTransactionBegin();
+    DetourThreadsUpdater _;
+
+    DetourDetach(&TweakDB_Load, _TweakDB_Load);
+    DetourTransactionCommit();
 }

@@ -7,7 +7,8 @@
 #include <vector>
 
 #include <Windows.h>
+#include <TlHelp32.h>
+#include <detours.h>
 
 #include <RED4ext/RED4ext.hpp>
-#include <RenHook/RenHook.hpp>
 #include <spdlog/spdlog.h>
