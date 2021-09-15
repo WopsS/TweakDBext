@@ -17,12 +17,22 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
     spdlog::trace("Real function executed");
 
     auto rootDir = Utils::GetRootDir();
+    spdlog::trace(L"Root directory is '{}'", rootDir.c_str());
+
     auto tweakdbsDir = rootDir / "r6" / "tweakdbs";
 
+    spdlog::trace("Reading directory...");
     for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
     {
+        spdlog::trace(L"Checking entry...");
+
         const auto& path = entry.path();
-        if (entry.path().extension() == L".bin")
+        spdlog::trace(L"Path for entry is '{}'", path.c_str());
+
+        auto extension = entry.path().extension();
+        spdlog::trace(L"Extension is '{}'", extension.c_str());
+
+        if (extension == L".bin")
         {
             try
             {
