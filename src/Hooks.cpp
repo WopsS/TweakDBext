@@ -12,7 +12,9 @@ decltype(&_TweakDB_Load) TweakDB_Load;
 
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 {
+    spdlog::trace("Executing real function");
     TweakDB_Load(aThis, a2);
+    spdlog::trace("Real function executed");
 
     auto rootDir = Utils::GetRootDir();
     auto tweakdbsDir = rootDir / "r6" / "tweakdbs";
@@ -58,6 +60,7 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 
 void Hooks::Attach()
 {
+    spdlog::trace("Attaching hook");
     DetourTransactionBegin();
     DetourThreadsUpdater _;
 
@@ -73,6 +76,7 @@ void Hooks::Attach()
         MessageBox(nullptr, message.c_str(), L"RED4ext", MB_ICONERROR | MB_OK);
     }
     DetourTransactionCommit();
+    spdlog::trace("Hook attached");
 }
 
 void Hooks::Detach()
