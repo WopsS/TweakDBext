@@ -22,33 +22,45 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
     auto tweakdbsDir = rootDir / "r6" / "tweakdbs";
 
     spdlog::trace("Reading directory...");
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
+    try
     {
-        spdlog::trace(L"Checking entry...");
-
-        const auto& path = entry.path();
-        spdlog::trace(L"Path for entry is '{}'", path.c_str());
-
-        auto extension = entry.path().extension();
-        spdlog::trace(L"Extension is '{}'", extension.c_str());
-
-        if (extension == L".bin")
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
         {
-            try
+            spdlog::trace(L"Checking entry...");
+
+            const auto& path = entry.path();
+            spdlog::trace(L"Path for entry is '{}'", path.c_str());
+
+            auto extension = entry.path().extension();
+            spdlog::trace(L"Extension is '{}'", extension.c_str());
+
+            if (extension == L".bin")
             {
-                TweakDB tweakDB(path);
-                tweakDB.Load();
-            }
-            catch (const std::exception& ex)
-            {
-                spdlog::warn(L"An exception occured while trying to load '{}' database", path.c_str());
-                spdlog::warn(ex.what());
-            }
-            catch (...)
-            {
-                spdlog::warn(L"An error occured while trying to load '{}' database", path.c_str());
+                try
+                {
+                    TweakDB tweakDB(path);
+                    tweakDB.Load();
+                }
+                catch (const std::exception& ex)
+                {
+                    spdlog::warn(L"An exception occured while trying to load '{}' database", path.c_str());
+                    spdlog::warn(ex.what());
+                }
+                catch (...)
+                {
+                    spdlog::warn(L"An error occured while trying to load '{}' database", path.c_str());
+                }
             }
         }
+    }
+    catch (const std::exception& ex)
+    {
+        spdlog::warn(L"An exception occured while reading the directory '{}'", tweakdbsDir.c_str());
+        spdlog::warn(ex.what());
+    }
+    catch (...)
+    {
+        spdlog::warn(L"An error occured while reading the directory '{}'", tweakdbsDir.c_str());
     }
 
     // Doing some quick hack to update records until TweakDB writer is finalized.
