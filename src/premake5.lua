@@ -14,8 +14,8 @@ project("TweakDBext")
     includedirs(
     {
         ".",
+        prj.includes("Detours"),
         prj.includes("spdlog"),
-        prj.includes("RenHook"),
         paths.deps("red4ext.sdk", "include")
     })
 
@@ -27,6 +27,6 @@ project("TweakDBext")
 
     links(
     {
-        prj.links("spdlog"),
-        prj.links("RenHook")
+        prj.links("Detours"),
+        prj.links("spdlog")
     })

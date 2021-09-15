@@ -1,24 +1,22 @@
 #include "stdafx.hpp"
 #include "Hooks.hpp"
 #include "Addresses.hpp"
+#include "DetourThreadsUpdater.hpp"
 #include "TweakDB.hpp"
 #include "Utils.hpp"
 
 namespace
 {
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2);
-renhook::prologue_hook<decltype(&_TweakDB_Load)> TweakDB_Load;
+decltype(&_TweakDB_Load) TweakDB_Load;
 
 void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
 {
-    spdlog::trace("Calling the original function");
     TweakDB_Load(aThis, a2);
-    spdlog::trace("Call succeeded");
 
     auto rootDir = Utils::GetRootDir();
     auto tweakdbsDir = rootDir / "r6" / "tweakdbs";
 
-    spdlog::trace(L"Loading additional TweakDBs, dir={}", tweakdbsDir.c_str());
     for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
     {
         const auto& path = entry.path();
@@ -42,37 +40,46 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
     }
 
     // Doing some quick hack to update records until TweakDB writer is finalized.
-    spdlog::trace("Updating records");
-    std::lock_guard<RED4ext::SharedMutex> _(aThis->mutex01);
+    auto db = RED4ext::TweakDB::Get();
+    std::lock_guard<RED4ext::SharedMutex> _(db->mutex01);
 
     std::vector<RED4ext::TweakDBID> records;
-    aThis->recordsByID.for_each([&records](const auto& aId, auto& aHandle) { records.push_back(aId); });
+    db->recordsByID.for_each([&records](const auto& aId, auto& aHandle) { records.push_back(aId); });
 
     for (auto record : records)
     {
-        if (!aThis->UpdateRecord(record))
+        if (!db->UpdateRecord(record))
         {
             spdlog::warn("Failed to update record, record_id={:#x}", record);
         }
     }
-
-    spdlog::trace("Records updated, count={}", records.size());
 }
 } // namespace
 
 void Hooks::Attach()
 {
-    auto addr = Addresses::TweakDB_Load + reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr));
-    new (&TweakDB_Load) renhook::prologue_hook<decltype(&_TweakDB_Load)>(addr, &_TweakDB_Load);
+    DetourTransactionBegin();
+    DetourThreadsUpdater _;
 
-    spdlog::trace("Attaching hook, addr={:#x}", addr);
-    TweakDB_Load.attach();
-    spdlog::trace("Hook attached", addr);
+    TweakDB_Load = reinterpret_cast<decltype(TweakDB_Load)>(Addresses::TweakDB_Load +
+                                                            reinterpret_cast<uintptr_t>(GetModuleHandle(nullptr)));
+    auto a = &_TweakDB_Load;
+    auto result = DetourAttach(&TweakDB_Load, _TweakDB_Load);
+    if (result != NO_ERROR)
+    {
+        auto message = fmt::format(L"Could not attach hook for main function, attach returned {}.\n\nProcess will exit "
+                                   L"to prevent further problems.",
+                                   result);
+        MessageBox(nullptr, message.c_str(), L"RED4ext", MB_ICONERROR | MB_OK);
+    }
+    DetourTransactionCommit();
 }
 
 void Hooks::Detach()
 {
-    spdlog::trace("Detaching hook");
-    TweakDB_Load.detach();
-    spdlog::trace("Hook detached");
+    DetourTransactionBegin();
+    DetourThreadsUpdater _;
+
+    DetourDetach(&TweakDB_Load, _TweakDB_Load);
+    DetourTransactionCommit();
 }
