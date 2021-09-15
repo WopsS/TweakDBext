@@ -17,26 +17,43 @@ void _TweakDB_Load(RED4ext::TweakDB* aThis, RED4ext::CString& a2)
     auto rootDir = Utils::GetRootDir();
     auto tweakdbsDir = rootDir / "r6" / "tweakdbs";
 
-    for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
+    try
     {
-        const auto& path = entry.path();
-        if (entry.path().extension() == L".bin")
+        if (!std::filesystem::exists(tweakdbsDir))
         {
-            try
+            std::filesystem::create_directories(tweakdbsDir);
+        }
+
+        for (const auto& entry : std::filesystem::recursive_directory_iterator(tweakdbsDir))
+        {
+            const auto& path = entry.path();
+            if (entry.path().extension() == L".bin")
             {
-                TweakDB tweakDB(path);
-                tweakDB.Load();
-            }
-            catch (const std::exception& ex)
-            {
-                spdlog::warn(L"An exception occured while trying to load '{}' database", path.c_str());
-                spdlog::warn(ex.what());
-            }
-            catch (...)
-            {
-                spdlog::warn(L"An error occured while trying to load '{}' database", path.c_str());
+                try
+                {
+                    TweakDB tweakDB(path);
+                    tweakDB.Load();
+                }
+                catch (const std::exception& ex)
+                {
+                    spdlog::error(L"An exception occured while trying to load '{}' database", path.c_str());
+                    spdlog::error(ex.what());
+                }
+                catch (...)
+                {
+                    spdlog::error(L"An unknown error occured while trying to load '{}' database", path.c_str());
+                }
             }
         }
+    }
+    catch (const std::exception& ex)
+    {
+        spdlog::error(L"An exception occured while reading the directory '{}'", tweakdbsDir.c_str());
+        spdlog::error(ex.what());
+    }
+    catch (...)
+    {
+        spdlog::error(L"An unknown error occured while reading the directory '{}'", tweakdbsDir.c_str());
     }
 
     // Doing some quick hack to update records until TweakDB writer is finalized.
