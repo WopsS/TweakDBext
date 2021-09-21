@@ -24,19 +24,19 @@ bool FileStream::IsOpen() const
     return m_file != INVALID_HANDLE_VALUE;
 }
 
-bool FileStream::ReadWrite(void* aBuffer, uint32_t aLength)
+void* FileStream::ReadWrite(void* aBuffer, uint32_t aLength)
 {
     DWORD numberOfBytesRead;
-    if (!ReadFile(m_file, aBuffer, aLength, &numberOfBytesRead, nullptr))
+    if (ReadFile(m_file, aBuffer, aLength, &numberOfBytesRead, nullptr))
     {
         auto fileName = m_path.stem();
         spdlog::warn(L"[{}] read error: requested_bytes={}, read={}, errno={:#x}", fileName.c_str(), aLength,
                      numberOfBytesRead, GetLastError());
 
-        return false;
+        return nullptr;
     }
 
-    return true;
+    return aBuffer;
 }
 
 size_t FileStream::GetPointerPosition()

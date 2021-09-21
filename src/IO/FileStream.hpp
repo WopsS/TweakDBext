@@ -9,7 +9,7 @@ public:
 
     bool IsOpen() const;
 
-    virtual bool ReadWrite(void* aBuffer, uint32_t aLength) override;
+    virtual void* ReadWrite(void* aBuffer, uint32_t aLength) override;
     virtual size_t GetPointerPosition() override;
     virtual size_t GetLength() override;
 
