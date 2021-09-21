@@ -27,7 +27,7 @@ bool FileStream::IsOpen() const
 void* FileStream::ReadWrite(void* aBuffer, uint32_t aLength)
 {
     DWORD numberOfBytesRead;
-    if (ReadFile(m_file, aBuffer, aLength, &numberOfBytesRead, nullptr))
+    if (!ReadFile(m_file, aBuffer, aLength, &numberOfBytesRead, nullptr))
     {
         auto fileName = m_path.stem();
         spdlog::warn(L"[{}] read error: requested_bytes={}, read={}, errno={:#x}", fileName.c_str(), aLength,
