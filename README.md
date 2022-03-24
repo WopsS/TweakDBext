@@ -1,5 +1,7 @@
 # TweakDBext
 
+**Important**: This mod is not supported anymore! Use [TweakXL](https://github.com/psiberx/cp2077-tweak-xl) instead.
+
 An plugin that load custom TweakDBs for REDengine 4 ([Cyberpunk 2077](https://www.cyberpunk.net)).
 
 ## How to install
